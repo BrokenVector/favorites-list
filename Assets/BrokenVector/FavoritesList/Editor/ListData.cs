@@ -49,7 +49,10 @@ namespace BrokenVector.FavoritesList
         {
             var guid = AssetDatabase.FindAssets("ListData")[0];
             var path = AssetDatabase.GUIDToAssetPath(guid);
-            return path.Remove(path.Length - 2) + "asset"; // .cs to .asset
+            if (path.EndsWith(".cs"))
+                return path.Remove(path.Length - 2) + "asset"; // .cs to .asset
+            else
+                return path;
         }
 
     }
