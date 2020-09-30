@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -20,6 +21,11 @@ namespace BrokenVector.FavoritesList
         // Constants
         private const float ICON_SIZE = 18;
         private const float CLEAR_BUTTON_WIDTH = 80f;
+        private const float ICON_BUTTON_WIDTH = 30f;
+        private const string SKIN_TOOLBAR = "Toolbar";
+        private const string SKIN_BUTTON = "ToolbarButton";
+        private const string BUTTON_ICON_ADD = "CreateAddNew";
+        private const string BUTTON_ICON_SELECT = "Animation.FilterBySelection";
 
         // Statics
         private static Vector2 ICON_SPACE;
@@ -30,7 +36,10 @@ namespace BrokenVector.FavoritesList
 
         // Fields
         private static ListData list;
-
+        private static List<string> listNames = new List<string>();
+        private static List<string> pathList = new List<string>();
+        private static string selectedName;
+        private static int index = 0;
 
         #region Editor Window
         [MenuItem(Constants.WINDOW_PATH), MenuItem(Constants.WINDOW_PATH_ALT)]
@@ -55,9 +64,31 @@ namespace BrokenVector.FavoritesList
 
         private static void LoadResources()
         {
-            if (list == null)
+            pathList = ListData.GetAssetsLocation();
+
+            if (index > pathList.Count - 1) {
+                index = 0;
+            }
+
+            listNames.Clear();
+
+            for (int i = 0; i < pathList.Count; i++)
             {
-                list = ListData.LoadList();
+                var match = Regex.Match(pathList[i], @".*[\/\\](.*)\..*$");
+
+                if (match.Success && match.Groups.Count >= 2)
+                {
+                    string name = match.Groups[1].Value;
+
+                    if (listNames.Contains(name))
+                        listNames.Add(pathList[i].Replace("/", "\u200A\u2215\u200B"));
+                    else
+                        listNames.Add(name);
+                }
+                else
+                {
+                    listNames.Add(pathList[i].Replace("/", "\u200A\u2215\u200B"));
+                }
             }
 
             if (DEFAULT_ICON == null)
@@ -120,6 +151,30 @@ namespace BrokenVector.FavoritesList
         {
             LoadResources();
 
+            if (pathList.Count <= 0) {
+                if (GUILayout.Button(new GUIContent("Create a Favorites List"), GUILayout.MinHeight(50f)))
+                {
+                    EditorApplication.ExecuteMenuItem("Assets/Create/" + Constants.CREATE_MENU_OPTION);
+                }
+                return;
+            }
+
+            GUILayout.BeginHorizontal(SKIN_TOOLBAR);
+            index = EditorGUILayout.Popup(index, listNames.ToArray(), EditorStyles.toolbarDropDown);
+
+            selectedName = listNames[index];
+            list = ListData.LoadList(pathList[index]);
+
+            if (GUILayout.Button(EditorGUIUtility.FindTexture(BUTTON_ICON_SELECT), SKIN_BUTTON, GUILayout.MaxWidth(ICON_BUTTON_WIDTH)))
+            {
+                EditorGUIUtility.PingObject(list);
+            }
+            if (GUILayout.Button(EditorGUIUtility.FindTexture(BUTTON_ICON_ADD), SKIN_BUTTON, GUILayout.MaxWidth(ICON_BUTTON_WIDTH)))
+            {
+                EditorApplication.ExecuteMenuItem("Assets/Create/" + Constants.CREATE_MENU_OPTION);
+            }
+            GUILayout.EndHorizontal();
+
             searchText = SearchUtils.BeginSearchbar(this, searchText);
             if (SearchUtils.Button(new GUIContent("Remove All"), GUILayout.MaxWidth(CLEAR_BUTTON_WIDTH)))
             {
@@ -128,6 +183,7 @@ namespace BrokenVector.FavoritesList
                 Repaint();
             }
             SearchUtils.EndSearchbar();
+
 
             using (var scrollView = new GUILayout.ScrollViewScope(scrollPos, false, false))
             {
@@ -219,6 +275,10 @@ namespace BrokenVector.FavoritesList
 
         private void DetectDragNDrop()
         {
+            if (pathList.Count <= 0) {
+                return;
+            }
+
             var eventType = Event.current.type;
             if (eventType == EventType.DragUpdated || eventType == EventType.DragPerform)
             {
