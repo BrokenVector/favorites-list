@@ -1,15 +1,18 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 
 namespace BrokenVector.FavoritesList
 {
+    [CreateAssetMenu(fileName = Constants.DEFAULT_FILENAME, menuName = Constants.CREATE_MENU_OPTION, order = 1)]
     [System.Serializable]
     public class ListData : ScriptableObject
     {
-
         public List<ObjectReference> References = new List<ObjectReference>();
+
+        private static List<ListData> listData = new List<ListData>();
 
         public void AddReference(ObjectReference obj)
         {
@@ -32,27 +35,29 @@ namespace BrokenVector.FavoritesList
             AssetDatabase.SaveAssets();
         }
 
-        public static ListData LoadList()
+        public static ListData LoadList(string path)
         {
-            ListData list = AssetDatabase.LoadAssetAtPath(GetAssetLocation(), typeof(ListData)) as ListData;
-            if (list != null)
-                return list;
-
-            list = CreateInstance<ListData>();
-            AssetDatabase.CreateAsset(list, GetAssetLocation());
-            AssetDatabase.SaveAssets();
-
-            return list;
+            return AssetDatabase.LoadAssetAtPath(path, typeof(ListData)) as ListData;
         }
 
-        private static string GetAssetLocation()
+        public static List<string> GetAssetsLocation()
         {
-            var guid = AssetDatabase.FindAssets("ListData")[0];
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            if (path.EndsWith(".cs"))
-                return path.Remove(path.Length - 2) + "asset"; // .cs to .asset
-            else
-                return path;
+            var guid = AssetDatabase.FindAssets("t:" + typeof(ListData).Name);
+            var pathList = new List<string>();
+
+            for (int i = guid.Length - 1; i >= 0; i--)
+            {
+                pathList.Add(AssetDatabase.GUIDToAssetPath(guid[i]));
+            }
+
+            return pathList;
+        }
+
+        public static void CreateNewListData()
+        {
+            ListData list = CreateInstance<ListData>();
+            AssetDatabase.CreateAsset(list, "Assets/" + Constants.DEFAULT_FILENAME + ".asset");
+            AssetDatabase.SaveAssets();
         }
 
     }

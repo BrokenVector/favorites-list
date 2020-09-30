@@ -21,5 +21,8 @@ namespace BrokenVector.FavoritesList
         // Editor Pref Paths
         public const string DEBUG_PREF = "Debug";                               // has to match FavoritesListReference.DEBUG_PREF (with AssetPrefs)
 
+        // File Creation
+        public const string DEFAULT_FILENAME = "NewFavoritesList";
+        public const string CREATE_MENU_OPTION = "Favorites List/List";
     }
 }
