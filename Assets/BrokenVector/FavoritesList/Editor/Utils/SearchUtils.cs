@@ -15,9 +15,9 @@ namespace BrokenVector.FavoritesList.Utils
         }
 
         private const string SKIN_TOOLBAR = "Toolbar";
-        private const string SKIN_SEARCH = "ToolbarSeachTextField";
+        private const string SKIN_SEARCH = "ToolbarSearchTextField";
         private const string SKIN_BUTTON = "ToolbarButton";
-        private const string SKIN_CANCELBUTTON = "ToolbarSeachCancelButton";
+        private const string SKIN_CANCELBUTTON = "ToolbarSearchCancelButton";
 
 
         public static string BeginSearchbar(EditorWindow window, string searchText)
